@@ -1,0 +1,322 @@
+{
+  "phase": "predictions",
+  "timestamp": "2026-03-27T01:41:15.388695",
+  "data": {
+    "predictions": [
+      5.25,
+      6.99,
+      13.77,
+      20.78,
+      21.65,
+      5.75,
+      11.67,
+      16.75,
+      27.7,
+      36.01,
+      3.1,
+      10.3,
+      20.46,
+      39.63,
+      6.11
+    ],
+    "references": [
+      4.5,
+      7.2,
+      12.8,
+      18.5,
+      22.0,
+      6.1,
+      9.3,
+      15.6,
+      28.4,
+      35.2,
+      3.8,
+      11.0,
+      20.1,
+      42.5,
+      8.7
+    ],
+    "building_ids": [
+      "ROT_BLDG_001",
+      "ROT_BLDG_002",
+      "ROT_BLDG_003",
+      "ROT_BLDG_004",
+      "ROT_BLDG_005",
+      "ROT_BLDG_006",
+      "ROT_BLDG_007",
+      "ROT_BLDG_008",
+      "ROT_BLDG_009",
+      "ROT_BLDG_010",
+      "ROT_BLDG_011",
+      "ROT_BLDG_012",
+      "ROT_BLDG_013",
+      "ROT_BLDG_014",
+      "ROT_BLDG_015"
+    ],
+    "classifications": [
+      {
+        "tier": "Critical Risk",
+        "color": "#FF4444",
+        "description": "Low-rise, likely submerged in severe flooding",
+        "height_m": 5.25,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      },
+      {
+        "tier": "Critical Risk",
+        "color": "#FF4444",
+        "description": "Low-rise, likely submerged in severe flooding",
+        "height_m": 6.99,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      },
+      {
+        "tier": "Moderate Risk",
+        "color": "#FFAA00",
+        "description": "Mid-rise, partial flood exposure",
+        "height_m": 13.77,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      },
+      {
+        "tier": "Moderate Risk",
+        "color": "#FFAA00",
+        "description": "Mid-rise, partial flood exposure",
+        "height_m": 20.78,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      },
+      {
+        "tier": "Moderate Risk",
+        "color": "#FFAA00",
+        "description": "Mid-rise, partial flood exposure",
+        "height_m": 21.65,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      },
+      {
+        "tier": "Critical Risk",
+        "color": "#FF4444",
+        "description": "Low-rise, likely submerged in severe flooding",
+        "height_m": 5.75,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      },
+      {
+        "tier": "Moderate Risk",
+        "color": "#FFAA00",
+        "description": "Mid-rise, partial flood exposure",
+        "height_m": 11.67,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      },
+      {
+        "tier": "Moderate Risk",
+        "color": "#FFAA00",
+        "description": "Mid-rise, partial flood exposure",
+        "height_m": 16.75,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      },
+      {
+        "tier": "Evacuation Safe",
+        "color": "#44BB44",
+        "description": "High-rise, viable for vertical evacuation",
+        "height_m": 27.7,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      },
+      {
+        "tier": "Evacuation Safe",
+        "color": "#44BB44",
+        "description": "High-rise, viable for vertical evacuation",
+        "height_m": 36.01,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      },
+      {
+        "tier": "Critical Risk",
+        "color": "#FF4444",
+        "description": "Low-rise, likely submerged in severe flooding",
+        "height_m": 3.1,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      },
+      {
+        "tier": "Moderate Risk",
+        "color": "#FFAA00",
+        "description": "Mid-rise, partial flood exposure",
+        "height_m": 10.3,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      },
+      {
+        "tier": "Moderate Risk",
+        "color": "#FFAA00",
+        "description": "Mid-rise, partial flood exposure",
+        "height_m": 20.46,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      },
+      {
+        "tier": "Evacuation Safe",
+        "color": "#44BB44",
+        "description": "High-rise, viable for vertical evacuation",
+        "height_m": 39.63,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      },
+      {
+        "tier": "Critical Risk",
+        "color": "#FF4444",
+        "description": "Low-rise, likely submerged in severe flooding",
+        "height_m": 6.11,
+        "confidence_note": "Height-based proxy only. Actual vulnerability depends on construction type, materials, and local flood dynamics."
+      }
+    ],
+    "buildings": [
+      {
+        "building_id": "ROT_BLDG_001",
+        "predicted_height_m": 5.25,
+        "reference_height_m": 4.5,
+        "error_m": 0.75,
+        "vulnerability_tier": "Critical Risk",
+        "est_floors": 2,
+        "lat": 51.92473705789445,
+        "lon": 4.471959877213041
+      },
+      {
+        "building_id": "ROT_BLDG_002",
+        "predicted_height_m": 6.99,
+        "reference_height_m": 7.2,
+        "error_m": -0.21,
+        "vulnerability_tier": "Critical Risk",
+        "est_floors": 2,
+        "lat": 51.918342892970706,
+        "lon": 4.476497236865874
+      },
+      {
+        "building_id": "ROT_BLDG_003",
+        "predicted_height_m": 13.77,
+        "reference_height_m": 12.8,
+        "error_m": 0.97,
+        "vulnerability_tier": "Moderate Risk",
+        "est_floors": 5,
+        "lat": 51.92162139968434,
+        "lon": 4.48487351922786
+      },
+      {
+        "building_id": "ROT_BLDG_004",
+        "predicted_height_m": 20.78,
+        "reference_height_m": 18.5,
+        "error_m": 2.28,
+        "vulnerability_tier": "Moderate Risk",
+        "est_floors": 7,
+        "lat": 51.916493475643165,
+        "lon": 4.479454688768272
+      },
+      {
+        "building_id": "ROT_BLDG_005",
+        "predicted_height_m": 21.65,
+        "reference_height_m": 22.0,
+        "error_m": -0.35,
+        "vulnerability_tier": "Moderate Risk",
+        "est_floors": 7,
+        "lat": 51.92434829137724,
+        "lon": 4.4700990082544
+      },
+      {
+        "building_id": "ROT_BLDG_006",
+        "predicted_height_m": 5.75,
+        "reference_height_m": 6.1,
+        "error_m": -0.35,
+        "vulnerability_tier": "Critical Risk",
+        "est_floors": 2,
+        "lat": 51.92465089703803,
+        "lon": 4.472580482473746
+      },
+      {
+        "building_id": "ROT_BLDG_007",
+        "predicted_height_m": 11.67,
+        "reference_height_m": 9.3,
+        "error_m": 2.37,
+        "vulnerability_tier": "Moderate Risk",
+        "est_floors": 4,
+        "lat": 51.913801031859705,
+        "lon": 4.488147710745067
+      },
+      {
+        "building_id": "ROT_BLDG_008",
+        "predicted_height_m": 16.75,
+        "reference_height_m": 15.6,
+        "error_m": 1.15,
+        "vulnerability_tier": "Moderate Risk",
+        "est_floors": 6,
+        "lat": 51.93181264066149,
+        "lon": 4.485337946962329
+      },
+      {
+        "building_id": "ROT_BLDG_009",
+        "predicted_height_m": 27.7,
+        "reference_height_m": 28.4,
+        "error_m": -0.7,
+        "vulnerability_tier": "Evacuation Safe",
+        "est_floors": 9,
+        "lat": 51.91859227538347,
+        "lon": 4.471123442280128
+      },
+      {
+        "building_id": "ROT_BLDG_010",
+        "predicted_height_m": 36.01,
+        "reference_height_m": 35.2,
+        "error_m": 0.81,
+        "vulnerability_tier": "Evacuation Safe",
+        "est_floors": 12,
+        "lat": 51.92618466053024,
+        "lon": 4.477973049874792
+      },
+      {
+        "building_id": "ROT_BLDG_011",
+        "predicted_height_m": 3.1,
+        "reference_height_m": 3.8,
+        "error_m": -0.7,
+        "vulnerability_tier": "Critical Risk",
+        "est_floors": 1,
+        "lat": 51.914940764696894,
+        "lon": 4.4790735382022255
+      },
+      {
+        "building_id": "ROT_BLDG_012",
+        "predicted_height_m": 10.3,
+        "reference_height_m": 11.0,
+        "error_m": -0.7,
+        "vulnerability_tier": "Moderate Risk",
+        "est_floors": 3,
+        "lat": 51.913187770422304,
+        "lon": 4.487356408041576
+      },
+      {
+        "building_id": "ROT_BLDG_013",
+        "predicted_height_m": 20.46,
+        "reference_height_m": 20.1,
+        "error_m": 0.36,
+        "vulnerability_tier": "Moderate Risk",
+        "est_floors": 7,
+        "lat": 51.917675599632,
+        "lon": 4.4824204456870795
+      },
+      {
+        "building_id": "ROT_BLDG_014",
+        "predicted_height_m": 39.63,
+        "reference_height_m": 42.5,
+        "error_m": -2.87,
+        "vulnerability_tier": "Evacuation Safe",
+        "est_floors": 13,
+        "lat": 51.91873422152179,
+        "lon": 4.479571360423556
+      },
+      {
+        "building_id": "ROT_BLDG_015",
+        "predicted_height_m": 6.11,
+        "reference_height_m": 8.7,
+        "error_m": -2.59,
+        "vulnerability_tier": "Critical Risk",
+        "est_floors": 2,
+        "lat": 51.923434205586865,
+        "lon": 4.47286708911051
+      }
+    ],
+    "metrics": {
+      "MAE": 1.1442,
+      "RMSE": 1.4408,
+      "R2": 0.9834,
+      "Num_Samples": 15
+    }
+  }
+}
