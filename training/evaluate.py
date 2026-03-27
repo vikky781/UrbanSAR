@@ -197,3 +197,45 @@ def print_evaluation_report(
     for tier, count in tier_counts.items():
         pct = 100.0 * count / len(table)
         print(f"  {tier}: {count} ({pct:.1f}%)")
+
+
+def main():
+    """CLI entry point for evaluation."""
+    import argparse
+    from data.dataset import UrbanSARDataset
+
+    parser = argparse.ArgumentParser(description="Evaluate trained model")
+    parser.add_argument("--model-path", type=str, default=str(MODEL_DIR / "best_model.pth"))
+    parser.add_argument("--chips-file", type=str, required=True,
+                        help="Path to chips_metadata.csv")
+    args = parser.parse_args()
+
+    # Load chips
+    df = pd.read_csv(args.chips_file)
+    chip_list = []
+    for _, row in df.iterrows():
+        chip_list.append({
+            "sar_path": row["sar_path"],
+            "optical_path": row["optical_path"],
+            "height_m": row["height_m"],
+            "building_id": row.get("building_id", "unknown"),
+        })
+
+    print(f"[INFO] Loaded {len(chip_list)} chips from {args.chips_file}")
+
+    # Load model
+    model, info = load_trained_model(args.model_path)
+
+    # Run inference
+    dataset = UrbanSARDataset(chip_list, augment=False, preprocess=True)
+    loader = DataLoader(dataset, batch_size=16, shuffle=False)
+    predictions, targets = run_inference(model, loader)
+
+    # Print report
+    building_ids = [c["building_id"] for c in chip_list]
+    print_evaluation_report(predictions, targets, building_ids)
+
+
+if __name__ == "__main__":
+    main()
+

@@ -1,0 +1,16 @@
+# Model checkpoints (too large for GitHub)
+*.pth
+checkpoints/
+
+# Data directories
+data/raw/
+data/processed/
+
+# Python
+__pycache__/
+*.pyc
+.env
+
+# OS
+.DS_Store
+Thumbs.db
