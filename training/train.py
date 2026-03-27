@@ -183,7 +183,7 @@ def train(
     print(f"[INFO] Training on: {device}")
     if device.type == "cuda":
         print(f"  GPU: {torch.cuda.get_device_name(0)}")
-        print(f"  Memory: {torch.cuda.get_device_properties(0).total_mem / 1e9:.1f} GB")
+        print(f"  Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
 
     # Data splits
     train_chips, val_chips = create_data_splits(chip_list, val_split=VAL_SPLIT)
