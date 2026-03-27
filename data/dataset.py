@@ -60,9 +60,19 @@ class UrbanSARDataset(Dataset):
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         chip = self.chip_list[idx]
 
-        # Load images
-        sar, _ = load_sar_image(chip["sar_path"])
-        optical, _ = load_optical_image(chip["optical_path"])
+        # Load images — detect format (.npy vs .tif)
+        sar_path = str(chip["sar_path"])
+        opt_path = str(chip["optical_path"])
+
+        if sar_path.endswith(".npy"):
+            sar = np.load(sar_path).astype(np.float32)
+        else:
+            sar, _ = load_sar_image(sar_path)
+
+        if opt_path.endswith(".npy"):
+            optical = np.load(opt_path).astype(np.float32)
+        else:
+            optical, _ = load_optical_image(opt_path)
 
         # Preprocess
         if self.preprocess:
