@@ -1,27 +1,27 @@
 """
 UrbanSAR - Chip Selection Script
 
-Selects and crops 150-200 building chips from SpaceNet-6 900x900px tiles.
+Selects and crops building chips from SpaceNet-6 900x900px tiles.
 
 Steps:
     1. Scan tiles for SAR + optical + label triplets
     2. Load building footprints with height labels
-    3. Crop building regions from tiles using footprint bounding boxes
-    4. Filter for height diversity
-    5. Save cropped chips + metadata CSV
+    3. Build spatial index of tiles → match buildings to overlapping tiles
+    4. Crop building regions from matched tiles
+    5. Filter for height diversity
+    6. Save cropped chips + metadata CSV
 
 Usage:
-    python scripts/select_chips.py --data-dir data/raw --output-dir data/processed/chips --num-chips 200
+    python scripts/select_chips.py --num-chips 500
 """
 import sys
 import argparse
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import List, Dict, Optional, Tuple
 
 import numpy as np
 import pandas as pd
 import rasterio
-from rasterio.windows import from_bounds
 import geopandas as gpd
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -29,14 +29,29 @@ from config import SAR_DIR, OPTICAL_DIR, LABELS_DIR, CHIPS_DIR
 from data.loader import load_height_labels, create_chip_pairs
 
 
+def get_tile_bounds(tile_path: Path) -> Optional[Tuple[float, float, float, float]]:
+    """Get geographic bounds of a tile. Returns (minx, miny, maxx, maxy) or None."""
+    try:
+        with rasterio.open(tile_path) as src:
+            b = src.bounds
+            return (b.left, b.bottom, b.right, b.top)
+    except Exception:
+        return None
+
+
+def bounds_overlap(a: Tuple, b: Tuple) -> bool:
+    """Check if two bounding boxes overlap. Both are (minx, miny, maxx, maxy)."""
+    return not (a[2] < b[0] or a[0] > b[2] or a[3] < b[1] or a[1] > b[3])
+
+
 def crop_building_from_tile(
     tile_path: Path,
     building_bounds: Tuple[float, float, float, float],
     padding_px: int = 32,
     target_size: int = 256,
-) -> np.ndarray:
+) -> Optional[np.ndarray]:
     """
-    Crop a building region from a 900x900 tile.
+    Crop a building region from a tile.
 
     Args:
         tile_path: Path to GeoTIFF tile
@@ -45,34 +60,42 @@ def crop_building_from_tile(
         target_size: Output chip size (square)
 
     Returns:
-        Cropped image array [C, target_size, target_size]
+        Cropped image array [C, target_size, target_size] or None
     """
-    with rasterio.open(tile_path) as src:
-        # Get window from geographic bounds
-        try:
-            window = from_bounds(*building_bounds, transform=src.transform)
-        except Exception:
-            # If bounds don't intersect, return None
-            return None
+    try:
+        with rasterio.open(tile_path) as src:
+            # Convert building bounds to pixel coordinates
+            minx, miny, maxx, maxy = building_bounds
+            inv_transform = ~src.transform
 
-        # Add padding
-        row_start = max(0, int(window.row_off) - padding_px)
-        col_start = max(0, int(window.col_off) - padding_px)
-        row_end = min(src.height, int(window.row_off + window.height) + padding_px)
-        col_end = min(src.width, int(window.col_off + window.width) + padding_px)
+            col_min, row_max = inv_transform * (minx, miny)
+            col_max, row_min = inv_transform * (maxx, maxy)
 
-        # Read windowed region
-        window_read = rasterio.windows.Window(
-            col_start, row_start,
-            col_end - col_start, row_end - row_start
-        )
+            # Ensure proper ordering
+            if col_min > col_max:
+                col_min, col_max = col_max, col_min
+            if row_min > row_max:
+                row_min, row_max = row_max, row_min
 
-        try:
-            chip = src.read(window=window_read)
-        except Exception:
-            return None
+            # Add padding and clamp to image bounds
+            col_start = max(0, int(col_min) - padding_px)
+            row_start = max(0, int(row_min) - padding_px)
+            col_end = min(src.width, int(col_max) + padding_px)
+            row_end = min(src.height, int(row_max) + padding_px)
 
-    if chip.size == 0:
+            # Validate window dimensions
+            w = col_end - col_start
+            h = row_end - row_start
+            if w < 4 or h < 4:
+                return None
+
+            window = rasterio.windows.Window(col_start, row_start, w, h)
+            chip = src.read(window=window)
+
+            if chip.size == 0 or chip.shape[1] < 4 or chip.shape[2] < 4:
+                return None
+
+    except Exception:
         return None
 
     # Resize to target size
@@ -88,18 +111,15 @@ def crop_building_from_tile(
 
 
 def select_diverse_chips(
-    buildings_with_tiles: List[Dict],
+    buildings: List[Dict],
     num_chips: int = 200,
     seed: int = 42,
 ) -> List[Dict]:
     """
-    Select chips with diverse building heights.
-
-    Strategy: bin heights into ranges, sample evenly from each bin
-    to ensure training data covers low-rise, mid-rise, and high-rise.
+    Select chips with diverse building heights using stratified sampling.
 
     Args:
-        buildings_with_tiles: List of building dicts with height info
+        buildings: List of building dicts with height info
         num_chips: Target number of chips
         seed: Random seed
 
@@ -108,13 +128,12 @@ def select_diverse_chips(
     """
     rng = np.random.RandomState(seed)
 
-    # Sort by height
-    sorted_buildings = sorted(buildings_with_tiles, key=lambda b: b["height_m"])
+    sorted_buildings = sorted(buildings, key=lambda b: b["height_m"])
 
     if len(sorted_buildings) <= num_chips:
         return sorted_buildings
 
-    # Create height bins: [0-5, 5-10, 10-20, 20-30, 30-50, 50+]
+    # Height bins: [0-5, 5-10, 10-20, 20-30, 30-50, 50+]
     bins = [0, 5, 10, 20, 30, 50, float("inf")]
     binned = {i: [] for i in range(len(bins) - 1)}
 
@@ -124,17 +143,16 @@ def select_diverse_chips(
                 binned[i].append(b)
                 break
 
-    # Sample evenly from each bin
     per_bin = num_chips // len(binned)
     selected = []
 
-    for i, buildings in binned.items():
-        if len(buildings) == 0:
+    for i, bldgs in binned.items():
+        if not bldgs:
             continue
-        n_sample = min(len(buildings), per_bin)
-        selected.extend(rng.choice(buildings, n_sample, replace=False).tolist())
+        n_sample = min(len(bldgs), per_bin)
+        selected.extend(rng.choice(bldgs, n_sample, replace=False).tolist())
 
-    # Fill remaining slots from largest bin
+    # Fill remaining
     if len(selected) < num_chips:
         remaining = [b for b in sorted_buildings if b not in selected]
         n_more = min(len(remaining), num_chips - len(selected))
@@ -160,15 +178,14 @@ def main():
     sar_chips_dir.mkdir(parents=True, exist_ok=True)
     optical_chips_dir.mkdir(parents=True, exist_ok=True)
 
-    # Find label files
+    # ── 1. Load label files ──
     labels_dir = Path(args.labels_dir)
-    label_files = list(labels_dir.glob("*.geojson")) + list(labels_dir.glob("*.json"))
+    label_files = sorted(labels_dir.glob("*.geojson")) + sorted(labels_dir.glob("*.json"))
 
     if not label_files:
-        print("[ERROR] No label files found. Run download_data.py first.")
+        print("[ERROR] No label files found. Download labels first.")
         sys.exit(1)
 
-    # Load all labels
     print(f"[INFO] Loading labels from {len(label_files)} files...")
     all_buildings = []
 
@@ -176,51 +193,74 @@ def main():
         gdf = load_height_labels(lf)
         if "height_m" in gdf.columns and gdf["height_m"].notna().any():
             for _, row in gdf[gdf["height_m"].notna()].iterrows():
+                bldg_id = row.get("Building_ID", row.get("building_id", str(row.name)))
                 all_buildings.append({
-                    "building_id": row.get("building_id", row.name),
-                    "height_m": row["height_m"],
+                    "building_id": bldg_id,
+                    "height_m": float(row["height_m"]),
                     "geometry": row.geometry,
-                    "bounds": row.geometry.bounds,
+                    "bounds": row.geometry.bounds,  # (minx, miny, maxx, maxy)
                     "label_file": lf.name,
                 })
 
     print(f"[INFO] Found {len(all_buildings)} buildings with height labels")
+    if not all_buildings:
+        print("[ERROR] No buildings with valid heights found. Check label column names.")
+        sys.exit(1)
 
-    # Find matching tiles
+    # ── 2. Find tile pairs and build spatial index ──
     pairs = create_chip_pairs(args.sar_dir, args.optical_dir)
     print(f"[INFO] Found {len(pairs)} SAR-optical tile pairs")
 
-    # Select diverse subset
+    if not pairs:
+        print("[ERROR] No matched SAR-optical tile pairs found.")
+        sys.exit(1)
+
+    # Get bounds for each tile pair (use SAR bounds as reference)
+    print("[INFO] Building spatial index of tiles...")
+    tile_bounds = []
+    for p in pairs:
+        tb = get_tile_bounds(p["sar"])
+        if tb is not None:
+            tile_bounds.append({"pair": p, "bounds": tb})
+
+    print(f"[INFO] Indexed {len(tile_bounds)} tiles with valid bounds")
+
+    # ── 3. Select diverse subset ──
     selected = select_diverse_chips(all_buildings, num_chips=args.num_chips)
     print(f"[INFO] Selected {len(selected)} diverse buildings")
 
-    # Crop chips
+    # ── 4. Match buildings to tiles and crop ──
     metadata = []
     chip_count = 0
+    skip_count = 0
 
     for i, bldg in enumerate(selected):
-        # Find the best matching tile for this building
-        # (simplified: use first tile - in practice, spatially match)
-        if not pairs:
-            print("[ERROR] No tile pairs available for cropping.")
-            break
+        # Find a tile that overlaps this building
+        matched_tile = None
+        for tb in tile_bounds:
+            if bounds_overlap(bldg["bounds"], tb["bounds"]):
+                matched_tile = tb["pair"]
+                break
 
-        sar_tile = pairs[min(i % len(pairs), len(pairs) - 1)]["sar"]
-        opt_tile = pairs[min(i % len(pairs), len(pairs) - 1)]["optical"]
+        if matched_tile is None:
+            skip_count += 1
+            continue
 
+        # Crop from matched SAR and optical tiles
         sar_chip = crop_building_from_tile(
-            sar_tile, bldg["bounds"],
+            matched_tile["sar"], bldg["bounds"],
             target_size=args.target_size,
         )
         opt_chip = crop_building_from_tile(
-            opt_tile, bldg["bounds"],
+            matched_tile["optical"], bldg["bounds"],
             target_size=args.target_size,
         )
 
         if sar_chip is None or opt_chip is None:
+            skip_count += 1
             continue
 
-        # Save chips as numpy files
+        # Save chips
         chip_id = f"chip_{chip_count:04d}"
         np.save(sar_chips_dir / f"{chip_id}_sar.npy", sar_chip)
         np.save(optical_chips_dir / f"{chip_id}_optical.npy", opt_chip)
@@ -231,24 +271,24 @@ def main():
             "optical_path": str(optical_chips_dir / f"{chip_id}_optical.npy"),
             "height_m": bldg["height_m"],
             "building_id": bldg["building_id"],
-            "source_tile": sar_tile.name,
+            "source_tile": matched_tile["sar"].name,
         })
         chip_count += 1
 
         if (i + 1) % 50 == 0:
-            print(f"  Processed {i + 1}/{len(selected)} buildings ({chip_count} chips saved)")
+            print(f"  Processed {i + 1}/{len(selected)} buildings ({chip_count} chips saved, {skip_count} skipped)")
 
-    # Save metadata CSV
+    # ── 5. Save metadata ──
     meta_path = output_dir / "chips_metadata.csv"
     pd.DataFrame(metadata).to_csv(meta_path, index=False)
 
     print(f"\n[OK] Chip selection complete!")
     print(f"  Chips saved: {chip_count}")
+    print(f"  Skipped (no overlap / bad crop): {skip_count}")
     print(f"  Metadata: {meta_path}")
     print(f"  SAR chips: {sar_chips_dir}")
     print(f"  Optical chips: {optical_chips_dir}")
 
-    # Height distribution summary
     heights = [m["height_m"] for m in metadata]
     if heights:
         print(f"\n  Height distribution:")
