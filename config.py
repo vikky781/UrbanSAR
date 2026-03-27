@@ -11,9 +11,15 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.resolve()
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
-SAR_DIR = RAW_DATA_DIR / "SAR"
-OPTICAL_DIR = RAW_DATA_DIR / "optical"
-LABELS_DIR = RAW_DATA_DIR / "labels"
+# SpaceNet-6 actual directory structure
+# Primary: train/AOI_11_Rotterdam/... layout
+# Fallback: flat SAR/ optical/ labels/ layout
+_SN6_ROOT = RAW_DATA_DIR / "train" / "AOI_11_Rotterdam"
+
+# Use SpaceNet-6 layout if it exists, else fallback to flat
+SAR_DIR = _SN6_ROOT / "SAR-Intensity" if (_SN6_ROOT / "SAR-Intensity").exists() else RAW_DATA_DIR / "SAR"
+OPTICAL_DIR = _SN6_ROOT / "PS-RGB" if (_SN6_ROOT / "PS-RGB").exists() else RAW_DATA_DIR / "optical"
+LABELS_DIR = RAW_DATA_DIR / "labels" if (RAW_DATA_DIR / "labels").exists() and any((RAW_DATA_DIR / "labels").iterdir()) else (_SN6_ROOT / "geojson_buildings" if (_SN6_ROOT / "geojson_buildings").exists() else RAW_DATA_DIR / "labels")
 PROCESSED_DIR = DATA_DIR / "processed"
 CHIPS_DIR = PROCESSED_DIR / "chips"
 

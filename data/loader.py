@@ -100,9 +100,10 @@ def load_height_labels(geojson_path: str | Path) -> gpd.GeoDataFrame:
     height_column = None
     possible_names = [
         "height_m", "height", "Height", "HEIGHT",
+        "roof_075mean", "roof_075median", "roof_075stdev",
         "75p_mean", "median_height", "mean_height",
         "bldg_height", "building_height",
-        "height_estimate", "ht_agl"
+        "height_estimate", "ht_agl",
     ]
     for col in possible_names:
         if col in gdf.columns:
