@@ -324,17 +324,37 @@ elif page == "📈 Metrics":
     fig_err = error_distribution(errors)
     st.plotly_chart(fig_err, use_container_width=True)
 
-    # Training info
-    st.markdown("### Training Details")
+    # Training info and curves
+    st.markdown("### Training History")
     model_path = MODEL_DIR / "best_model.pth"
-    if model_path.exists():
-        import torch
-        ckpt = torch.load(model_path, map_location="cpu", weights_only=False)
-        st.json({
-            "Best Epoch": ckpt.get("epoch", "N/A"),
-            "Validation MAE": ckpt.get("val_mae", "N/A"),
-            "Validation RMSE": ckpt.get("val_rmse", "N/A"),
-            "Validation R²": ckpt.get("val_r2", "N/A"),
-        })
-    else:
-        st.warning("No trained model found. Train the model first.")
+    log_path = Path("logs/training_log.csv")
+    
+    col1, col2 = st.columns([1, 2])
+    
+    with col1:
+        if model_path.exists():
+            import torch
+            try:
+                ckpt = torch.load(model_path, map_location="cpu", weights_only=False)
+                st.json({
+                    "Best Epoch": ckpt.get("epoch", "N/A"),
+                    "Validation MAE": ckpt.get("val_mae", "N/A"),
+                    "Validation RMSE": ckpt.get("val_rmse", "N/A"),
+                    "Validation R²": ckpt.get("val_r2", "N/A"),
+                })
+            except Exception as e:
+                st.warning(f"Could not load checkpoint info: {e}")
+        else:
+            st.warning("No trained model found. Train the model first.")
+            
+    with col2:
+        if log_path.exists():
+            try:
+                log_df = pd.read_csv(log_path)
+                from dashboard.charts import training_curves
+                fig_curves = training_curves(log_df)
+                st.plotly_chart(fig_curves, use_container_width=True)
+            except Exception as e:
+                st.warning(f"Could not load training logs: {e}")
+        else:
+            st.info("No training_log.csv found to plot history.")

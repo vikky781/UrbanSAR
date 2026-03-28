@@ -112,11 +112,11 @@ def height_scatter(
         x=refs, y=preds,
         mode="markers",
         marker=dict(
-            size=10,
+            size=8,
             color=preds,
             colorscale="Viridis",
             showscale=True,
-            colorbar=dict(title="Height (m)"),
+            colorbar=dict(title="Height (m)", x=1.05),
         ),
         name="Buildings",
         hovertemplate="Ref: %{x:.1f}m<br>Pred: %{y:.1f}m<extra></extra>",
@@ -141,9 +141,36 @@ def height_scatter(
         font=dict(color="white"),
         xaxis=dict(range=[0, max_val]),
         yaxis=dict(range=[0, max_val]),
+        showlegend=False,  # Legend overlaps with colorbar, hiding it
+        margin=dict(l=40, r=40, t=60, b=40),
         height=450,
     )
 
+    return fig
+
+def training_curves(log_df: pd.DataFrame) -> go.Figure:
+    """Line chart of training and validation MAE over epochs."""
+    fig = go.Figure()
+    
+    if "epoch" in log_df.columns:
+        x = log_df["epoch"]
+        if "train_MAE" in log_df.columns:
+            fig.add_trace(go.Scatter(x=x, y=log_df["train_MAE"], mode="lines", name="Train MAE", line=dict(color="#06B6D4")))
+        if "val_MAE" in log_df.columns:
+            fig.add_trace(go.Scatter(x=x, y=log_df["val_MAE"], mode="lines", name="Val MAE", line=dict(color="#7C3AED", width=3)))
+            
+    fig.update_layout(
+        title="Training History (Mean Absolute Error)",
+        xaxis_title="Epoch",
+        yaxis_title="MAE (meters)",
+        template="plotly_dark",
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="white"),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02),
+        margin=dict(l=40, r=40, t=60, b=40),
+        height=350,
+    )
     return fig
 
 
