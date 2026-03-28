@@ -344,6 +344,19 @@ elif page == "📈 Metrics":
                 })
             except Exception as e:
                 st.warning(f"Could not load checkpoint info: {e}")
+        elif log_path.exists():
+            # If model isn't uploaded (due to size limits), read final metrics from log
+            try:
+                log_df = pd.read_csv(log_path)
+                best_row = log_df.loc[log_df["val_MAE"].idxmin()]
+                st.json({
+                    "Best Epoch": int(best_row.get("epoch", 0)),
+                    "Validation MAE": round(float(best_row.get("val_MAE", 0)), 4),
+                    "Validation RMSE": round(float(best_row.get("val_RMSE", 0)), 4),
+                    "Validation R²": round(float(best_row.get("val_R2", 0)), 4),
+                })
+            except Exception:
+                st.info("Model weights omitted for cloud deployment limit (271MB).")
         else:
             st.warning("No trained model found. Train the model first.")
             
