@@ -40,6 +40,20 @@ def height_comparison_bar(
     if building_ids is None:
         building_ids = [f"Bldg {i+1}" for i in range(len(predictions))]
 
+    # Limit to top 20 buildings sorted by reference height for readability
+    max_bars = 20
+    if len(predictions) > max_bars:
+        indices = np.argsort(references)
+        # Pick evenly spaced indices to show range
+        step = len(indices) // max_bars
+        indices = indices[::step][:max_bars]
+        predictions = [predictions[i] for i in indices]
+        references = [references[i] for i in indices]
+        building_ids = [building_ids[i] for i in indices]
+
+    # Force string labels so plotly doesn't treat numeric IDs as axis values
+    building_ids = [str(b) for b in building_ids]
+
     fig = go.Figure(data=[
         go.Bar(
             name="Predicted",
@@ -59,7 +73,7 @@ def height_comparison_bar(
 
     fig.update_layout(
         barmode="group",
-        title="Predicted vs. Reference Building Heights",
+        title="Predicted vs. Reference Building Heights (sample)",
         xaxis_title="Building",
         yaxis_title="Height (meters)",
         template="plotly_dark",
@@ -67,6 +81,7 @@ def height_comparison_bar(
         paper_bgcolor="rgba(0,0,0,0)",
         font=dict(color="white"),
         legend=dict(orientation="h", yanchor="bottom", y=1.02),
+        xaxis=dict(type="category", tickangle=45),
         height=450,
     )
 
